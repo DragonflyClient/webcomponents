@@ -18,10 +18,13 @@ if (location.href.indexOf('login') > -1 || location.href.indexOf('ideas') > -1) 
         const formDataLogin = new FormData(formLogin)
         const name = formDataLogin.get("name")
         const password = formDataLogin.get("password")
+        const code = formDataLogin.get("code")
         const body = {
             "name": name,
-            "password": password
+            "password": password,
         }
+        if (code) body.code = code
+        console.log(body)
 
         fetch("https://api.playdragonfly.net/v1/authentication/cookie/login", {
             method: "POST",
@@ -32,6 +35,7 @@ if (location.href.indexOf('login') > -1 || location.href.indexOf('ideas') > -1) 
             credentials: 'include'
         }).then(result => result.json())
             .then(result => {
+                console.log(result)
                 if (result.success) {
                     const username = result.username
 
@@ -50,12 +54,16 @@ if (location.href.indexOf('login') > -1 || location.href.indexOf('ideas') > -1) 
                         }, reloadDelay);
                     }
                 } else {
-                    const error = result.error
-                    console.log(error)
-                    Toast.fire({
-                        icon: 'error',
-                        title: result.error
-                    })
+                    if (result.require2FA) {
+                        console.log("2FA required")
+                        afterLogin(result.success, null, 23142) // 23142 -> 2FA code required
+                    } else {
+                        console.log(result)
+                        Toast.fire({
+                            icon: 'error',
+                            title: result.error
+                        })
+                    }
                 }
             })
     });
